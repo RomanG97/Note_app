@@ -1,0 +1,21 @@
+<resources>
+    <string name="app_name">Note</string>
+    <string name="tasks">Tasks</string>
+    <string name="notes">Notes</string>
+    <string name="all">All</string>
+    <string name="empty">Empty</string>
+    <string name="date_picker_title">Put the due date</string>
+    <string name="title">Title (up to 20 characters)</string>
+    <string name="description">Description (up to 20 characters)</string>
+    <string name="calendar">Calendar</string>
+    <string name="time">Time</string>
+    <string name="cancel">Cancel</string>
+    <string name="ok">OK</string>
+    <string name="portrait">Portrait</string>
+    <string name="logout">Logout</string>
+
+    <string-array name="items">
+        <item>Задание</item>
+        <item>Заметка</item>
+    </string-array>
+</resources>

@@ -1,0 +1,136 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical">
+
+        <LinearLayout
+            android:id="@+id/llSettings"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical">
+
+            <DatePicker
+                xmlns:android="http://schemas.android.com/apk/res/android"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:id="@+id/dialog_date_picker"
+
+                android:calendarViewShown="false" />
+
+            <TimePicker xmlns:android="http://schemas.android.com/apk/res/android"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+
+                android:id="@+id/dialog_time_picker" />
+
+            <LinearLayout
+                android:id="@+id/llTitleAndTrash"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal">
+
+                <android.support.v7.widget.AppCompatEditText
+                    android:id="@+id/etTitle"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_margin="14dp"
+                    android:hint="@string/title"
+                    android:inputType="textPersonName"
+                    android:maxLength="20"
+                    android:layout_weight="1"/>
+
+                <ImageView
+                    android:id="@+id/ivDelete"
+                    android:layout_width="70dp"
+                    android:layout_height="50dp"
+                    android:layout_marginTop="14dp"
+                    android:layout_weight="1"
+                    android:src="@drawable/delete_black_18dp"/>
+            </LinearLayout>
+
+            <android.support.v7.widget.AppCompatEditText
+                android:id="@+id/etDescription"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_margin="14dp"
+                android:hint="@string/description"
+                android:inputType="textPersonName"
+                android:maxLength="20" />
+
+            <Spinner
+                android:id="@+id/spinner"
+                style="@style/SpinnerWithoutArrow"
+                android:layout_width="match_parent"
+                android:layout_height="48dp"
+                android:layout_margin="14dp"
+                android:textSize="18sp"
+                android:entries="@array/items">
+            </Spinner>
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:layout_margin="14dp"
+                android:orientation="horizontal">
+
+                <Button
+                    android:id="@+id/btnCalendar"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:layout_weight="1"
+                    android:layout_marginLeft="3dp"
+                    android:layout_marginRight="3dp"
+                    android:textSize="12sp"
+                    android:text="@string/calendar" />
+
+                <Button
+                    android:id="@+id/btnTime"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:layout_weight="1"
+                    android:layout_marginLeft="3dp"
+                    android:layout_marginRight="3dp"
+                    android:textSize="12sp"
+                    android:text="@string/time" />
+
+                <Button
+                    android:id="@+id/btnPortrait"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:layout_weight="1"
+                    android:layout_marginLeft="3dp"
+                    android:layout_marginRight="3dp"
+                    android:textSize="12sp"
+                    android:text="@string/portrait" />
+
+            </LinearLayout>
+        </LinearLayout>
+
+    <LinearLayout
+        android:id="@+id/llButtons"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal">
+
+        <Button
+            android:id="@+id/btnAddNoteCancel"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_margin="14dp"
+            android:layout_weight="1"
+            android:textSize="14sp"
+            android:text="@string/cancel" />
+
+        <Button
+            android:id="@+id/btnAddNoteOK"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_margin="14dp"
+            android:layout_weight="1"
+            android:textSize="14sp"
+            android:text="@string/ok" />
+
+    </LinearLayout>
+</LinearLayout>

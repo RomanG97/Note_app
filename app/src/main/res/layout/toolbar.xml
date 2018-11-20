@@ -1,0 +1,110 @@
+<?xml version="1.0" encoding="utf-8"?>
+<android.support.design.widget.AppBarLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="48dp">
+
+    <RelativeLayout
+        android:id="@+id/rlToolbar"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:background="@color/colorPrimaryDark">
+
+        <LinearLayout
+            android:id="@+id/llLogout"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignParentStart="true"
+            android:layout_centerVertical="true">
+
+            <ImageView
+                android:id="@+id/ivLogout"
+                android:layout_width="34dp"
+                android:layout_height="34dp"
+                android:layout_marginStart="6dp"
+                android:src="@drawable/reply_black_18dp" />
+
+            <TextView
+                android:id="@+id/tvLogOut"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:textColor="@android:color/white"
+                android:layout_gravity="center_vertical"
+                android:textSize="16sp"
+                android:text="@string/logout" />
+        </LinearLayout>
+
+        <TextView
+            android:id="@+id/tvTitle"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_centerHorizontal="true"
+            android:textColor="@android:color/white"
+            android:textSize="20sp"
+            android:text="@string/app_name" />
+
+        <RelativeLayout
+            android:layout_width="wrap_content"
+            android:layout_height="match_parent"
+            android:layout_toStartOf="@+id/tvSubTitle"
+            android:layout_below="@+id/tvTitle">
+
+            <ImageView
+                android:layout_width="wrap_content"
+                android:layout_height="12dp"
+                android:id="@+id/ivSecond"
+                android:layout_centerInParent="true"
+                android:src="@drawable/class_black_18dp" />
+        </RelativeLayout>
+
+        <TextView
+            android:id="@+id/tvSubTitle"
+            android:layout_width="wrap_content"
+            android:layout_height="match_parent"
+            android:layout_below="@+id/tvTitle"
+            android:layout_centerHorizontal="true"
+            android:textColor="@android:color/white"
+            android:textSize="12sp"
+            android:gravity="center"
+            android:text="@string/app_name" />
+
+        <ProgressBar
+            android:layout_width="20dp"
+            android:layout_height="20dp"
+            android:layout_below="@+id/tvTitle"
+            android:layout_centerHorizontal="true"
+            android:id="@+id/progressIoTLocations"
+            android:visibility="gone"/>
+
+        <ImageView
+            android:id="@+id/ivSettings"
+            android:padding="4dp"
+            android:layout_width="34dp"
+            android:layout_height="34dp"
+            android:layout_alignParentEnd="true"
+            android:layout_centerVertical="true"
+            android:layout_marginEnd="6dp"
+            android:src="@drawable/settings_black_18dp" />
+
+        <ImageView
+            android:id="@+id/ivAddNote"
+            android:layout_width="34dp"
+            android:layout_height="34dp"
+            android:layout_marginEnd="6dp"
+            android:layout_centerVertical="true"
+            android:layout_toStartOf="@+id/ivSettings"
+            android:src="@drawable/add_black_18dp" />
+
+        <ImageView
+            android:id="@+id/ivDelete"
+            android:padding="4dp"
+            android:layout_width="34dp"
+            android:layout_height="34dp"
+            android:layout_marginEnd="6dp"
+            android:layout_centerVertical="true"
+            android:layout_toStartOf="@+id/ivAddNote"
+            android:src="@drawable/done_all_black_18dp" />
+    </RelativeLayout>
+</android.support.design.widget.AppBarLayout>
