@@ -13,6 +13,14 @@
         android:layout_height="wrap_content"
         android:orientation="vertical">
 
+        <TextView
+            android:id="@+id/tvStyle"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="Application style:"
+            android:textSize="20sp"/>
+
         <RadioButton
             android:id="@+id/rbRed"
             android:layout_margin="5dp"
@@ -35,13 +43,22 @@
             android:text="Blue"/>
     </RadioGroup>
 
+    <CheckBox
+        android:id="@+id/cbShake"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_margin="20dp"
+        android:text="@string/adding_a_shake_note_technology"
+        android:textSize="20sp"/>
+
     <TextView
         android:id="@+id/tvInfo"
         android:layout_margin="20dp"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_weight="1"
-        android:text="Info" />
+        android:text="Info"
+        android:textSize="20sp"/>
 
     <LinearLayout
         android:id="@+id/llButtons"

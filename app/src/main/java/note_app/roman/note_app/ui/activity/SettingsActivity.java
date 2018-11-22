@@ -2,11 +2,13 @@ package note_app.roman.note_app.ui.activity;
 
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
+import android.widget.CheckBox;
 import android.widget.RadioButton;
 import android.widget.TextView;
 
 import butterknife.BindView;
 import butterknife.ButterKnife;
+import butterknife.OnCheckedChanged;
 import butterknife.OnClick;
 import note_app.roman.note_app.R;
 import note_app.roman.note_app.utils.Constants;
@@ -25,6 +27,8 @@ public class SettingsActivity extends AppCompatActivity {
     RadioButton rbBlue;
     @BindView(R.id.tvInfo)
     TextView tvInfo;
+    @BindView(R.id.cbShake)
+    CheckBox cbShake;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -48,6 +52,7 @@ public class SettingsActivity extends AppCompatActivity {
                 rbBlue.toggle();
                 break;
         }
+        cbShake.setChecked(Preference.getSensor(this));
 
 
     }
@@ -69,10 +74,17 @@ public class SettingsActivity extends AppCompatActivity {
 
     @OnClick(R.id.btnSettingsOK)
     public void clickBtnSettingsOK() {
+
         Preference.setColor(this, color);
+
+        if(cbShake.isChecked()){
+            Preference.setSensor(this, true);
+        } else {
+            Preference.setSensor(this, false);
+        }
+
         finish();
     }
-
 
     @OnClick(R.id.btnSettingsCancel)
     public void clickBtnSettingsCancel() {

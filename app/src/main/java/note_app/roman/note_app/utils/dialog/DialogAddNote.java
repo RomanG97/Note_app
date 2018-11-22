@@ -29,6 +29,7 @@ import java.util.Date;
 import io.realm.Realm;
 import io.realm.RealmResults;
 import note_app.roman.note_app.R;
+import note_app.roman.note_app.interfaces.DialogStateListener;
 import note_app.roman.note_app.note.Note;
 import note_app.roman.note_app.utils.Constants;
 import note_app.roman.note_app.utils.IdGenerator;
@@ -70,12 +71,14 @@ public class DialogAddNote {
 
     private Realm realm;
     private FragmentManager fragmentManager;
+    private DialogStateListener dialogStateListener;
 
-    public DialogAddNote(AppCompatActivity activity) {
+    public DialogAddNote(AppCompatActivity activity, DialogStateListener dialogStateListener) {
         this.context = activity;
         fragmentManager = activity.getSupportFragmentManager();
         typeOfDialog = "AddDialog";
         user = Preference.getUser(context);
+        this.dialogStateListener = dialogStateListener;
     }
 
     public DialogAddNote(AppCompatActivity activity, Note note) {
@@ -86,8 +89,9 @@ public class DialogAddNote {
         user = Preference.getUser(context);
     }
 
-    public void showDialog() {
 
+    public void showDialog() {
+        dialogStateListener.setState(true);
         initUI();
 
         if (note != null) {
@@ -101,12 +105,18 @@ public class DialogAddNote {
         initSpinner();
 
         btnAddNoteOK.setOnClickListener(v -> {
-            if (saveNewNote()) {
+            if (isValidNote()) {
+                saveNote();
+                dialogStateListener.setState(false);
                 dialog.dismiss();
             }
         });
 
-        btnAddNoteCancel.setOnClickListener(v -> dialog.dismiss());
+
+        btnAddNoteCancel.setOnClickListener(v -> {
+            dialogStateListener.setState(false);
+            dialog.dismiss();
+        });
 
         btnCalendar.setOnClickListener(v -> {
             llTitleAndTrash.setVisibility(View.GONE);
@@ -180,19 +190,29 @@ public class DialogAddNote {
                 RealmResults<Note> rows = realm.where(Note.class).equalTo("id", note.getId()).findAll();
                 rows.deleteAllFromRealm();
             });
+            dialogStateListener.setState(false);
             dialog.dismiss();
         });
 
-        dialog.setCanceledOnTouchOutside(true);
+        dialog.setCanceledOnTouchOutside(false);
+        dialog.setCancelable(false);
         dialog.show();
     }
 
 
-    private boolean saveNewNote() {
+    private boolean isValidNote() {
         if (!verificationOfFields(title, description, type, status, user)) {
             Toast.makeText(context, "Error of filling the fields", Toast.LENGTH_LONG).show();
             return false;
         }
+
+        return true;
+    }
+
+    /**
+     * add Note to database
+     */
+    private void saveNote(){
         Calendar calendarForNote = Calendar.getInstance();
         calendarForNote.set(Calendar.YEAR, year);
         calendarForNote.set(Calendar.MONTH, month);
@@ -204,7 +224,6 @@ public class DialogAddNote {
         realm.executeTransaction(realm -> realm.copyToRealm(new Note(IdGenerator.Generate(title),
                 title, description, type, status, date,
                 System.currentTimeMillis(), Preference.getUser(context))));
-        return true;
     }
 
     private boolean verificationOfFields(String title, String description, String type,

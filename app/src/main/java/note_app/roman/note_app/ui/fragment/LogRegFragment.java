@@ -34,6 +34,8 @@ public class LogRegFragment extends Fragment {
     private String Pas = "";
     private View view;
     private Realm realm;
+    private String patternPas = "(?=.*[0-9]).{5,}";
+    private String patternLog = "(?=.*[a-z]).{5,}";
 
     public int getType() {
         return type;
@@ -111,9 +113,21 @@ public class LogRegFragment extends Fragment {
             Toast.makeText(getContext(), "Empty Login", Toast.LENGTH_SHORT).show();
             return;
         }
+        if(Constants.REG == type) {
+            if (!(Log.matches(patternLog))) {
+                Toast.makeText(getContext(), "Use 5 or more characters of the alphabet (a-z)", Toast.LENGTH_SHORT).show();
+                return;
+            }
+        }
         if ("".equals(Pas)) {
             Toast.makeText(getContext(), "Empty Password", Toast.LENGTH_SHORT).show();
             return;
+        }
+        if(Constants.REG == type) {
+            if (!(Pas.matches(patternPas))) {
+                Toast.makeText(getContext(), "Use 5 or more numeric characters (0-9)", Toast.LENGTH_SHORT).show();
+                return;
+            }
         }
         if (getContext() != null) {
             Preference.setUser(getContext(), Log);
@@ -126,7 +140,6 @@ public class LogRegFragment extends Fragment {
             for (int i = 0; i < myUserArray.size(); i++) {
                 if (Log.equals(Objects.requireNonNull(myUserArray.get(i)).getLogin())) {
                     Toast.makeText(getContext(), "This Login is already used", Toast.LENGTH_SHORT).show();
-                    return;
                 }
             }
             realm.executeTransaction(realm -> realm.copyToRealm(new User(Log, Pas)));

@@ -25,7 +25,6 @@ import note_app.roman.note_app.utils.RecyclerViewAdapter;
 
 public class FragmentForTabs extends Fragment {
 
-    //    private static final String TAG = "FragmentForTabs";
     private String tab_type = "";
     private Realm realm;
     private RecyclerView recyclerView;
@@ -43,17 +42,22 @@ public class FragmentForTabs extends Fragment {
         recyclerView = view.findViewById(R.id.rvNotes);
         recyclerView.setLayoutManager(new LinearLayoutManager(getContext()));
         setRecyclerViewAdapter();
+/*
+        FragmentActivity activity = getActivity();
+        if(activity instanceof MainActivity){
+            ((MainActivity) activity).ivAddNote.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View view) {
+                    ((MainActivity) activity).showDialog(FragmentForTabs.this);
+                }
+            });
+        }
+*/
         return view;
     }
 
     public void setFragmentType(String str) {
         this.tab_type = str;
-    }
-
-    @Override
-    public void onResume() {
-        super.onResume();
-        setRecyclerViewAdapter();
     }
 
     @Override
@@ -71,7 +75,6 @@ public class FragmentForTabs extends Fragment {
             }
         }
 
-        //List<Note> myNoteArray = realm.where(Note.class).findAll();
 
         switch (tab_type) {
             case Constants.TASKS:
@@ -104,4 +107,5 @@ public class FragmentForTabs extends Fragment {
         recyclerView.addItemDecoration(dividerItemDecoration);
         recyclerView.setAdapter(adapter);
     }
+
 }

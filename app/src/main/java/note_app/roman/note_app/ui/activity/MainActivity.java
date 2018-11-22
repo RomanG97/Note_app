@@ -1,6 +1,10 @@
 package note_app.roman.note_app.ui.activity;
 
 import android.content.Intent;
+import android.hardware.Sensor;
+import android.hardware.SensorEvent;
+import android.hardware.SensorEventListener;
+import android.hardware.SensorManager;
 import android.os.Build;
 import android.os.Bundle;
 import android.support.design.widget.TabLayout;
@@ -15,6 +19,7 @@ import android.view.WindowManager;
 import android.widget.ImageView;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -23,20 +28,31 @@ import butterknife.BindView;
 import butterknife.ButterKnife;
 import butterknife.OnClick;
 import note_app.roman.note_app.R;
+import note_app.roman.note_app.interfaces.DialogStateListener;
 import note_app.roman.note_app.ui.fragment.FragmentForTabs;
 import note_app.roman.note_app.utils.BaseActivity;
 import note_app.roman.note_app.utils.Constants;
 import note_app.roman.note_app.utils.Preference;
 import note_app.roman.note_app.utils.dialog.DialogAddNote;
 
-public class MainActivity extends BaseActivity {
+public class MainActivity extends BaseActivity implements SensorEventListener, DialogStateListener{
 
     private static final String TAG = "MainActivity";
     private TabLayout tabs;
+    private SensorManager sensorManager;
+    private Sensor accelerometer;
+    private DialogAddNote customDialog;
+    private boolean isOpened;
 
     FragmentForTabs fragment1;
     FragmentForTabs fragment2;
     FragmentForTabs fragment3;
+
+    long lastUpdate = 0;
+    float last_x = 0;
+    float last_y = 0;
+    float last_z = 0;
+
 
     @BindView(R.id.ivDelete)
     ImageView ivDelete;
@@ -60,9 +76,14 @@ public class MainActivity extends BaseActivity {
 
     @OnClick(R.id.ivAddNote)
     public void clickAddNote() {
-        DialogAddNote customDialog = new DialogAddNote(MainActivity.this);
+        if(isOpened){
+            return;
+        }
+
+        customDialog = new DialogAddNote(this, this);
         customDialog.showDialog();
     }
+
 
     @OnClick(R.id.ivSettings)
     public void clickSettings() {
@@ -78,6 +99,8 @@ public class MainActivity extends BaseActivity {
     @OnClick(R.id.llLogout)
     public void clickIvLogout() {
         Preference.setUser(this, "Empty User");
+        Intent intent = new Intent(this, RegLogActivity.class);
+        startActivity(intent);
         finish();
     }
 
@@ -177,6 +200,44 @@ public class MainActivity extends BaseActivity {
         }
     }
 
+    @Override
+    public void onSensorChanged(SensorEvent sensorEvent) {
+        if(Preference.getSensor(this)) {
+            if (accelerometer == sensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER)) {
+                long curTime = System.currentTimeMillis();
+
+                if ((curTime - lastUpdate) > 100) {
+                    long diffTime = (curTime - lastUpdate);
+                    lastUpdate = curTime;
+
+                    float x = sensorEvent.values[SensorManager.DATA_X];
+                    float y = sensorEvent.values[SensorManager.DATA_Y];
+                    float z = sensorEvent.values[SensorManager.DATA_Z];
+
+                    float speed = Math.abs(x + y + z - last_x - last_y - last_z) / diffTime * 10000;
+
+                    if (speed > 4000) {
+                        clickAddNote();
+
+                    }
+                    last_x = x;
+                    last_y = y;
+                    last_z = z;
+                }
+            }
+        }
+    }
+
+    @Override
+    public void onAccuracyChanged(Sensor sensor, int i) {
+
+    }
+
+    @Override
+    public void setState(boolean isOpened) {
+        this.isOpened = isOpened;
+    }
+
     class ViewPagerAdapter extends FragmentPagerAdapter {
         private List<Fragment> fragmentList = new ArrayList<>();
         private List<String> fragmentTitleList = new ArrayList<>();
@@ -227,13 +288,21 @@ public class MainActivity extends BaseActivity {
     @Override
     public void onResume() {
         super.onResume();
-//        update();
+        update();
+        registerSensorListener();
+    }
+
+    @Override
+    protected void onPause() {
+        super.onPause();
+        unregisterSensorListener();
+
     }
 
     @Override
     public void update() {
         super.update();
-        switch (Preference.getColor(this)) {
+        switch (Preference.getColor(MainActivity.this)) {
             case 0:
                 rlToolbar.setBackgroundColor(getResources().getColor(R.color.theme_Red));
                 setColorToStatusBar(getResources().getColor(R.color.theme_Red));
@@ -257,6 +326,19 @@ public class MainActivity extends BaseActivity {
             window.addFlags(WindowManager.LayoutParams.FLAG_DRAWS_SYSTEM_BAR_BACKGROUNDS);
             window.setStatusBarColor(color);
         }
+    }
+
+    private void registerSensorListener(){
+        sensorManager = (SensorManager) getSystemService(SENSOR_SERVICE);
+        if(sensorManager == null){
+            return;
+        }
+        accelerometer = sensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER);
+        sensorManager.registerListener(this, accelerometer, SensorManager.SENSOR_DELAY_UI);
+    }
+
+    private void unregisterSensorListener(){
+    sensorManager.unregisterListener(this);
 
     }
 }

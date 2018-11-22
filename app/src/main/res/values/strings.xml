@@ -13,6 +13,7 @@
     <string name="ok">OK</string>
     <string name="portrait">Portrait</string>
     <string name="logout">Logout</string>
+    <string name="adding_a_shake_note_technology">Adding a shake note technology</string>
 
     <string-array name="items">
         <item>Задание</item>
