@@ -113,7 +113,7 @@ public class LogRegFragment extends Fragment {
             Toast.makeText(getContext(), "Empty Login", Toast.LENGTH_SHORT).show();
             return;
         }
-        if(Constants.REG == type) {
+        if (Constants.REG == type) {
             if (!(Log.matches(patternLog))) {
                 Toast.makeText(getContext(), "Use 5 or more characters of the alphabet (a-z)", Toast.LENGTH_SHORT).show();
                 return;
@@ -123,7 +123,7 @@ public class LogRegFragment extends Fragment {
             Toast.makeText(getContext(), "Empty Password", Toast.LENGTH_SHORT).show();
             return;
         }
-        if(Constants.REG == type) {
+        if (Constants.REG == type) {
             if (!(Pas.matches(patternPas))) {
                 Toast.makeText(getContext(), "Use 5 or more numeric characters (0-9)", Toast.LENGTH_SHORT).show();
                 return;
@@ -151,7 +151,7 @@ public class LogRegFragment extends Fragment {
             List<User> myUserArray = realm.where(User.class).findAll();
             for (int i = 0; i < myUserArray.size(); i++) {
                 if (Log.equals(Objects.requireNonNull(myUserArray.get(i)).getLogin())) {
-                    if(Pas.equals(Objects.requireNonNull(myUserArray.get(i)).getPassword())){
+                    if (Pas.equals(Objects.requireNonNull(myUserArray.get(i)).getPassword())) {
                         Preference.setUser(getContext(), Log);
                         Intent intent = new Intent(getContext(), MainActivity.class);
                         startActivity(intent);

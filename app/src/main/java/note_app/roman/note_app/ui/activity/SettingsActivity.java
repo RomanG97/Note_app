@@ -8,8 +8,8 @@ import android.widget.TextView;
 
 import butterknife.BindView;
 import butterknife.ButterKnife;
-import butterknife.OnCheckedChanged;
 import butterknife.OnClick;
+import butterknife.Unbinder;
 import note_app.roman.note_app.R;
 import note_app.roman.note_app.utils.Constants;
 import note_app.roman.note_app.utils.Preference;
@@ -18,6 +18,7 @@ public class SettingsActivity extends AppCompatActivity {
 
     private String info;
     private int color;
+    private Unbinder unbinder;
 
     @BindView(R.id.rbRed)
     RadioButton rbRed;
@@ -34,7 +35,7 @@ public class SettingsActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_settings);
-        ButterKnife.bind(this);
+        unbinder = ButterKnife.bind(this);
 
 
         this.info = Preference.getInfo(this);
@@ -77,7 +78,7 @@ public class SettingsActivity extends AppCompatActivity {
 
         Preference.setColor(this, color);
 
-        if(cbShake.isChecked()){
+        if (cbShake.isChecked()) {
             Preference.setSensor(this, true);
         } else {
             Preference.setSensor(this, false);
@@ -92,4 +93,9 @@ public class SettingsActivity extends AppCompatActivity {
         finish();
     }
 
+    @Override
+    protected void onDestroy() {
+        unbinder.unbind();
+        super.onDestroy();
+    }
 }

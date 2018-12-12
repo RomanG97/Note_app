@@ -37,7 +37,9 @@ public class MigrationManager implements RealmMigration {
                     .addField("type", String.class)
                     .addField("status", String.class)
                     .addField("date", Long.class)
-                    .addField("curDate", Long.class);
+                    .addField("curDate", Long.class)
+                    .addField("user", String.class)
+                    .addField("filePath", String.class);
         } else {
             if (!note.hasField("id")) {
                 note = note.addField("id", Long.class);
@@ -62,6 +64,9 @@ public class MigrationManager implements RealmMigration {
             }
             if (!note.hasField("user")) {
                 note = note.addField("user", String.class);
+            }
+            if (!note.hasField("filePath")) {
+                note = note.addField("filePath", String.class);
             }
 
         }

@@ -12,6 +12,8 @@ public class Note extends RealmObject {
     private long date;
     private long curDate;
     private String login;
+    private String filePath;
+
 
     public String getId() {
         return id;
@@ -43,6 +45,10 @@ public class Note extends RealmObject {
 
     public String getLogin() {
         return login;
+    }
+
+    public String getFilePath() {
+        return filePath;
     }
 
 
@@ -78,10 +84,14 @@ public class Note extends RealmObject {
         this.login = login;
     }
 
+    public void setFilePath(String filePath) {
+        this.filePath = filePath;
+    }
+
     public Note() {
     }
 
-    public Note(String id, String title, String description, String type, String status, long date, long curDate, String login) {
+    public Note(String id, String title, String description, String type, String status, long date, long curDate, String login, String filePath) {
         this.id = id;
         this.title = title;
         this.description = description;
@@ -90,6 +100,7 @@ public class Note extends RealmObject {
         this.date = date;
         this.curDate = curDate;
         this.login = login;
+        this.filePath = filePath;
     }
 
 }

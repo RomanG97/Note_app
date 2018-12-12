@@ -1,17 +1,22 @@
 package note_app.roman.note_app.ui.activity;
 
+import android.app.Activity;
+import android.app.Application;
 import android.content.Intent;
 import android.hardware.Sensor;
 import android.hardware.SensorEvent;
 import android.hardware.SensorEventListener;
 import android.hardware.SensorManager;
+import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
+import android.support.annotation.Nullable;
 import android.support.design.widget.TabLayout;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
 import android.support.v4.app.FragmentPagerAdapter;
 import android.support.v4.content.ContextCompat;
+import android.support.v4.content.FileProvider;
 import android.support.v4.view.ViewPager;
 import android.view.View;
 import android.view.Window;
@@ -19,23 +24,29 @@ import android.view.WindowManager;
 import android.widget.ImageView;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
-import android.widget.Toast;
 
+import com.squareup.leakcanary.LeakCanary;
+
+import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 
 import butterknife.BindView;
 import butterknife.ButterKnife;
 import butterknife.OnClick;
+import butterknife.Unbinder;
+import io.realm.Realm;
+import io.realm.RealmResults;
 import note_app.roman.note_app.R;
 import note_app.roman.note_app.interfaces.DialogStateListener;
+import note_app.roman.note_app.note.Note;
 import note_app.roman.note_app.ui.fragment.FragmentForTabs;
 import note_app.roman.note_app.utils.BaseActivity;
 import note_app.roman.note_app.utils.Constants;
 import note_app.roman.note_app.utils.Preference;
 import note_app.roman.note_app.utils.dialog.DialogAddNote;
 
-public class MainActivity extends BaseActivity implements SensorEventListener, DialogStateListener{
+public class MainActivity extends BaseActivity implements SensorEventListener, DialogStateListener {
 
     private static final String TAG = "MainActivity";
     private TabLayout tabs;
@@ -43,6 +54,12 @@ public class MainActivity extends BaseActivity implements SensorEventListener, D
     private Sensor accelerometer;
     private DialogAddNote customDialog;
     private boolean isOpened;
+    private Realm realm;
+    private int curTab = -1;
+    private File photoFile;
+    private Unbinder unbinder;
+    private ViewPagerAdapter adapter;
+    private ViewPager vpViewPager;
 
     FragmentForTabs fragment1;
     FragmentForTabs fragment2;
@@ -67,7 +84,7 @@ public class MainActivity extends BaseActivity implements SensorEventListener, D
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-        ButterKnife.bind(this);
+        unbinder = ButterKnife.bind(this);
 
         initializationUI();
 
@@ -76,7 +93,7 @@ public class MainActivity extends BaseActivity implements SensorEventListener, D
 
     @OnClick(R.id.ivAddNote)
     public void clickAddNote() {
-        if(isOpened){
+        if (isOpened) {
             return;
         }
 
@@ -93,7 +110,32 @@ public class MainActivity extends BaseActivity implements SensorEventListener, D
 
     @OnClick(R.id.ivDelete)
     public void clickDelete() {
-
+        switch (curTab) {
+            case 0:
+                realm.executeTransaction(realm -> {
+                    RealmResults<Note> rows = realm.where(Note.class)
+                            .equalTo("login", Preference.getUser(this))
+                            .equalTo("type", Constants.TASKS)
+                            .findAll();
+                    rows.deleteAllFromRealm();
+                });
+                break;
+            case 1:
+                realm.executeTransaction(realm -> {
+                    RealmResults<Note> rows = realm.where(Note.class)
+                            .equalTo("login", Preference.getUser(this))
+                            .equalTo("type", Constants.NOTES)
+                            .findAll();
+                    rows.deleteAllFromRealm();
+                });
+                break;
+            case 2:
+                realm.executeTransaction(realm -> {
+                    RealmResults<Note> rows = realm.where(Note.class).equalTo("login", Preference.getUser(this)).findAll();
+                    rows.deleteAllFromRealm();
+                });
+                break;
+        }
     }
 
     @OnClick(R.id.llLogout)
@@ -105,7 +147,7 @@ public class MainActivity extends BaseActivity implements SensorEventListener, D
     }
 
     private void setupViewPager(ViewPager vpViewPager) {
-        ViewPagerAdapter adapter = new ViewPagerAdapter(getSupportFragmentManager());
+        adapter = new ViewPagerAdapter(getSupportFragmentManager());
         adapter.addFragment(fragment1, getString(R.string.tasks));
         adapter.addFragment(fragment2, getString(R.string.notes));
         adapter.addFragment(fragment3, getString(R.string.all));
@@ -156,14 +198,17 @@ public class MainActivity extends BaseActivity implements SensorEventListener, D
                         case Constants.FIRST_TAB:
                             ivDelete.setImageDrawable(ContextCompat.getDrawable(MainActivity.this,
                                     R.drawable.done_all_black_18dp));
+                            curTab = 0;
                             break;
                         case Constants.SECOND_TAB:
                             ivDelete.setImageDrawable(ContextCompat.getDrawable(MainActivity.this,
                                     R.drawable.delete_black_18dp));
+                            curTab = 1;
                             break;
                         case Constants.THIRD_TAB:
                             ivDelete.setImageDrawable(ContextCompat.getDrawable(MainActivity.this,
                                     R.drawable.delete_sweep_black_18dp));
+                            curTab = 2;
                             break;
                     }
 
@@ -202,7 +247,7 @@ public class MainActivity extends BaseActivity implements SensorEventListener, D
 
     @Override
     public void onSensorChanged(SensorEvent sensorEvent) {
-        if(Preference.getSensor(this)) {
+        if (Preference.getSensor(this)) {
             if (accelerometer == sensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER)) {
                 long curTime = System.currentTimeMillis();
 
@@ -269,6 +314,8 @@ public class MainActivity extends BaseActivity implements SensorEventListener, D
 
 
     private void initializationUI() {
+        realm = Realm.getDefaultInstance();
+
         fragment1 = new FragmentForTabs();
         fragment1.setFragmentType(Constants.TASKS);
         fragment2 = new FragmentForTabs();
@@ -283,6 +330,7 @@ public class MainActivity extends BaseActivity implements SensorEventListener, D
         initTabBarLayout(viewPager);
 
         tvSubTitle.setText(Preference.getUser(this));
+
     }
 
     @Override
@@ -328,17 +376,44 @@ public class MainActivity extends BaseActivity implements SensorEventListener, D
         }
     }
 
-    private void registerSensorListener(){
+    private void registerSensorListener() {
         sensorManager = (SensorManager) getSystemService(SENSOR_SERVICE);
-        if(sensorManager == null){
+        if (sensorManager == null) {
             return;
         }
         accelerometer = sensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER);
         sensorManager.registerListener(this, accelerometer, SensorManager.SENSOR_DELAY_UI);
     }
 
-    private void unregisterSensorListener(){
-    sensorManager.unregisterListener(this);
+    private void unregisterSensorListener() {
+        sensorManager.unregisterListener(this);
+    }
 
+    @Override
+    public void setPhotoFile(File photoFile) {
+        this.photoFile = photoFile;
+    }
+
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
+        if (resultCode != Activity.RESULT_OK) {
+            return;
+        }
+
+        if (requestCode == 9001) {
+            Uri uri = FileProvider.getUriForFile(
+                    this,
+                    "note_app.roman.note_app.fileprovider",
+                    photoFile);
+
+            revokeUriPermission(uri, Intent.FLAG_GRANT_WRITE_URI_PERMISSION);
+
+        }
+    }
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        unbinder.unbind();
     }
 }

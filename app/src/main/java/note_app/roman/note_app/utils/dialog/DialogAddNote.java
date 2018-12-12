@@ -1,10 +1,20 @@
 package note_app.roman.note_app.utils.dialog;
 
+import android.app.Activity;
+import android.app.AlarmManager;
 import android.app.Dialog;
+import android.app.PendingIntent;
 import android.content.Context;
+import android.content.Intent;
+import android.content.pm.PackageManager;
+import android.content.pm.ResolveInfo;
+import android.net.Uri;
+import android.os.Build;
+import android.provider.MediaStore;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.v4.app.FragmentManager;
+import android.support.v4.content.FileProvider;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.AppCompatEditText;
 import android.text.Editable;
@@ -23,8 +33,10 @@ import android.widget.Spinner;
 import android.widget.TimePicker;
 import android.widget.Toast;
 
+import java.io.File;
 import java.util.Calendar;
 import java.util.Date;
+import java.util.List;
 
 import io.realm.Realm;
 import io.realm.RealmResults;
@@ -33,11 +45,14 @@ import note_app.roman.note_app.interfaces.DialogStateListener;
 import note_app.roman.note_app.note.Note;
 import note_app.roman.note_app.utils.Constants;
 import note_app.roman.note_app.utils.IdGenerator;
+import note_app.roman.note_app.utils.NotificationReceiver;
 import note_app.roman.note_app.utils.Preference;
+
+import static android.content.Context.ALARM_SERVICE;
 
 public class DialogAddNote {
 
-    private Context context;
+    private Context activity;
     private String title = "";
     private String description = "";
     private String type = "";
@@ -45,6 +60,8 @@ public class DialogAddNote {
     private long date;
     private int selectedItem = -1;
     private String user;
+    private String filePath = "";
+
     private Note note = null;
     private Dialog dialog;
     private String typeOfDialog;
@@ -63,6 +80,8 @@ public class DialogAddNote {
     private Button btnPortrait;
     private Button btnAddNoteOK;
     private Button btnAddNoteCancel;
+    private ImageView ivPhoto;
+    private LinearLayout llButtons;
     private ImageView ivDelete;
     private LinearLayout llTitleAndTrash;
 
@@ -73,45 +92,71 @@ public class DialogAddNote {
     private FragmentManager fragmentManager;
     private DialogStateListener dialogStateListener;
 
+    private File photoFile;
+
+
+    private AlarmManager alarmManager;
+    private Intent alarmIntent;
+
     public DialogAddNote(AppCompatActivity activity, DialogStateListener dialogStateListener) {
-        this.context = activity;
+        this.activity = activity;
         fragmentManager = activity.getSupportFragmentManager();
         typeOfDialog = "AddDialog";
-        user = Preference.getUser(context);
+        user = Preference.getUser(activity);
         this.dialogStateListener = dialogStateListener;
+
+
     }
 
-    public DialogAddNote(AppCompatActivity activity, Note note) {
-        this.context = activity;
+    public DialogAddNote(AppCompatActivity activity, Note note, DialogStateListener dialogStateListener) {
+        this.activity = activity;
         this.note = note;
         fragmentManager = activity.getSupportFragmentManager();
         typeOfDialog = "CorrectionDialog";
-        user = Preference.getUser(context);
+        user = Preference.getUser(activity);
+        this.dialogStateListener = dialogStateListener;
     }
 
 
     public void showDialog() {
-        dialogStateListener.setState(true);
         initUI();
-
-        if (note != null) {
-            etTitle.setText(note.getTitle());
-            etDescription.setText(note.getDescription());
-
-        }
-
         initTextListeners();
-
         initSpinner();
 
         btnAddNoteOK.setOnClickListener(v -> {
             if (isValidNote()) {
+
                 saveNote();
+
+                if (type.equals(Constants.TASKS)) {
+                    alarmIntent.putExtra("TITLE", title);
+                    alarmIntent.putExtra("DESCRIPTION", description);
+                    PendingIntent pendingIntent = PendingIntent.getBroadcast(activity,
+                            (int) System.currentTimeMillis() + 10000,
+                            alarmIntent,
+                            PendingIntent.FLAG_UPDATE_CURRENT);
+                    if (alarmIntent != null) {
+                        int SDK_INT = Build.VERSION.SDK_INT;
+                        if (SDK_INT < Build.VERSION_CODES.KITKAT) {
+                            alarmManager.set(AlarmManager.RTC_WAKEUP,
+                                    (int) (System.currentTimeMillis() + 10000),
+                                    pendingIntent);
+                        } else if (SDK_INT < Build.VERSION_CODES.M) {
+                            alarmManager.setExact(AlarmManager.RTC_WAKEUP,
+                                    (int) (System.currentTimeMillis() + 10000),
+                                    pendingIntent);
+                        } else {
+                            alarmManager.setExactAndAllowWhileIdle(AlarmManager.RTC_WAKEUP,
+                                    (int) (System.currentTimeMillis() + 10000),
+                                    pendingIntent);
+                        }
+                    }
+                }
+
                 dialogStateListener.setState(false);
                 dialog.dismiss();
             }
         });
-
 
         btnAddNoteCancel.setOnClickListener(v -> {
             dialogStateListener.setState(false);
@@ -123,6 +168,8 @@ public class DialogAddNote {
             etDescription.setVisibility(View.GONE);
             spinner.setVisibility(View.GONE);
             timePicker.setVisibility(View.GONE);
+            llButtons.setVisibility(View.GONE);
+            ivPhoto.setVisibility(View.GONE);
 
             Calendar calendar = Calendar.getInstance();
             if (null != note) {
@@ -152,6 +199,8 @@ public class DialogAddNote {
             etDescription.setVisibility(View.GONE);
             spinner.setVisibility(View.GONE);
             datePicker.setVisibility(View.GONE);
+            llButtons.setVisibility(View.GONE);
+            ivPhoto.setVisibility(View.GONE);
 
             Calendar calendar = Calendar.getInstance();
             if (null != note) {
@@ -182,6 +231,8 @@ public class DialogAddNote {
             llTitleAndTrash.setVisibility(View.VISIBLE);
             etDescription.setVisibility(View.VISIBLE);
             spinner.setVisibility(View.VISIBLE);
+            llButtons.setVisibility(View.VISIBLE);
+            ivPhoto.setVisibility(View.VISIBLE);
 
         });
 
@@ -194,6 +245,41 @@ public class DialogAddNote {
             dialog.dismiss();
         });
 
+        ivPhoto.setOnClickListener(view -> {
+
+            photoFile = getPhotoFile();
+
+            final Intent captureIntent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
+            boolean canTakePhoto = photoFile != null && captureIntent.resolveActivity(activity.getPackageManager()) != null;
+            if (!canTakePhoto) {
+                ivPhoto.setVisibility(View.GONE);
+                return;
+            }
+
+            Uri uri = FileProvider.getUriForFile(
+                    activity,
+                    "note_app.roman.note_app.fileprovider",
+                    photoFile);
+            captureIntent.putExtra(MediaStore.EXTRA_OUTPUT, uri);
+            List<ResolveInfo> cameraActivities =
+                    activity.getPackageManager()
+                            .queryIntentActivities(
+                                    captureIntent,
+                                    PackageManager.MATCH_DEFAULT_ONLY);
+            for (ResolveInfo activityRI : cameraActivities) {
+                activity.grantUriPermission(
+                        activityRI.activityInfo.packageName,
+                        uri,
+                        Intent.FLAG_GRANT_WRITE_URI_PERMISSION);
+            }
+
+
+            ((Activity) activity).startActivityForResult(captureIntent, 9001);
+            dialogStateListener.setPhotoFile(photoFile);
+
+
+        });
+
         dialog.setCanceledOnTouchOutside(false);
         dialog.setCancelable(false);
         dialog.show();
@@ -202,7 +288,7 @@ public class DialogAddNote {
 
     private boolean isValidNote() {
         if (!verificationOfFields(title, description, type, status, user)) {
-            Toast.makeText(context, "Error of filling the fields", Toast.LENGTH_LONG).show();
+            Toast.makeText(activity, "Error of filling the fields", Toast.LENGTH_LONG).show();
             return false;
         }
 
@@ -212,7 +298,7 @@ public class DialogAddNote {
     /**
      * add Note to database
      */
-    private void saveNote(){
+    private void saveNote() {
         Calendar calendarForNote = Calendar.getInstance();
         calendarForNote.set(Calendar.YEAR, year);
         calendarForNote.set(Calendar.MONTH, month);
@@ -221,9 +307,16 @@ public class DialogAddNote {
         calendarForNote.set(Calendar.MINUTE, minutes);
         long date = calendarForNote.getTimeInMillis();
 
+        if (!(photoFile == null || !photoFile.exists())) {
+            filePath = photoFile.getPath();
+        }
+        else{
+            filePath = "No_Photo_File";
+        }
+
         realm.executeTransaction(realm -> realm.copyToRealm(new Note(IdGenerator.Generate(title),
                 title, description, type, status, date,
-                System.currentTimeMillis(), Preference.getUser(context))));
+                System.currentTimeMillis(), Preference.getUser(activity), filePath)));
     }
 
     private boolean verificationOfFields(String title, String description, String type,
@@ -249,7 +342,8 @@ public class DialogAddNote {
     }
 
     private void initUI() {
-        dialog = new Dialog(context);
+        dialogStateListener.setState(true);
+        dialog = new Dialog(activity);
         dialog.requestWindowFeature(Window.FEATURE_NO_TITLE);
         dialog.setCancelable(false);
         dialog.setContentView(R.layout.dialog_add_note);
@@ -260,23 +354,38 @@ public class DialogAddNote {
         btnTime = dialog.findViewById(R.id.btnTime);
         btnPortrait = dialog.findViewById(R.id.btnPortrait);
         btnAddNoteOK = dialog.findViewById(R.id.btnAddNoteOK);
+        ivPhoto = dialog.findViewById(R.id.ivPhoto);
+        llButtons = dialog.findViewById(R.id.llButtons);
         btnAddNoteCancel = dialog.findViewById(R.id.btnAddNoteCancel);
         llTitleAndTrash = dialog.findViewById(R.id.llTitleAndTrash);
         ivDelete = dialog.findViewById(R.id.ivDelete);
         ivDelete.setVisibility(View.GONE);
         if ("CorrectionDialog".equals(typeOfDialog)) {
             ivDelete.setVisibility(View.VISIBLE);
+            ivPhoto.setVisibility(View.GONE);
         }
         datePicker = dialog.findViewById(R.id.dialog_date_picker);
         datePicker.setVisibility(View.GONE);
         timePicker = dialog.findViewById(R.id.dialog_time_picker);
         timePicker.setVisibility(View.GONE);
 
+
         spinner = dialog.findViewById(R.id.spinner);
 
         realm = Realm.getDefaultInstance();
+
+        setInfoToNote();
+
+        alarmManager = (AlarmManager) activity.getSystemService(ALARM_SERVICE);
+        alarmIntent = new Intent(activity, NotificationReceiver.class);
     }
 
+    private void setInfoToNote(){
+        if (note != null) {
+            etTitle.setText(note.getTitle());
+            etDescription.setText(note.getDescription());
+        }
+    }
     private void initTextListeners() {
         etTitle.addTextChangedListener(new TextWatcher() {
             @Override
@@ -313,8 +422,8 @@ public class DialogAddNote {
 
 
     private void initSpinner() {
-        ArrayAdapter<String> spinnerAdapter = new ArrayAdapter<String>(context, R.layout.spinner_row,
-                R.id.tvSpinnerItem, context.getResources().getStringArray(R.array.items)) {
+        ArrayAdapter<String> spinnerAdapter = new ArrayAdapter<String>(activity, R.layout.spinner_row,
+                R.id.tvSpinnerItem, activity.getResources().getStringArray(R.array.items)) {
             @Override
             public View getDropDownView(int position, @Nullable View convertView, @NonNull ViewGroup parent) {
                 View v;
@@ -352,4 +461,14 @@ public class DialogAddNote {
             }
         });
     }
+
+    private String getPhotoFilename() {
+        return "IMG_" + user + "_" + title + ".jpg";
+    }
+
+    private File getPhotoFile() {
+        File filesDir = activity.getFilesDir();
+        return new File(filesDir, getPhotoFilename());
+    }
+
 }

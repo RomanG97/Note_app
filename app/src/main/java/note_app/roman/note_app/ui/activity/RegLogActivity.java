@@ -7,11 +7,10 @@ import android.support.v7.app.AppCompatActivity;
 import android.widget.Button;
 import android.widget.LinearLayout;
 
-import java.util.Objects;
-
 import butterknife.BindView;
 import butterknife.ButterKnife;
 import butterknife.OnClick;
+import butterknife.Unbinder;
 import note_app.roman.note_app.R;
 import note_app.roman.note_app.ui.fragment.LogRegFragment;
 import note_app.roman.note_app.utils.Constants;
@@ -22,7 +21,7 @@ public class RegLogActivity extends AppCompatActivity {
     private FragmentManager fragmentManager;
     private LogRegFragment logRegFragment1;
     private LogRegFragment logRegFragment2;
-
+    private Unbinder unbinder;
     @BindView(R.id.btnReg)
     Button btnReg;
 
@@ -37,9 +36,9 @@ public class RegLogActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_reg_log);
 
-        ButterKnife.bind(this);
+        unbinder = ButterKnife.bind(this);
 
-        if(!(Preference.getUser(this).equals("Empty User"))){
+        if (!(Preference.getUser(this).equals("Empty User"))) {
             Intent intent = new Intent(this, MainActivity.class);
             startActivity(intent);
             this.finish();
@@ -69,5 +68,11 @@ public class RegLogActivity extends AppCompatActivity {
                 .remove(logRegFragment1)
                 .replace(R.id.llRegLog, logRegFragment2)
                 .commit();
+    }
+
+    @Override
+    protected void onDestroy() {
+        unbinder.unbind();
+        super.onDestroy();
     }
 }

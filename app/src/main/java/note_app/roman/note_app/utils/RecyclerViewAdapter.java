@@ -1,12 +1,15 @@
 package note_app.roman.note_app.utils;
 
 import android.app.Activity;
+import android.graphics.Bitmap;
+import android.graphics.Matrix;
 import android.support.annotation.NonNull;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.RecyclerView;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 
@@ -15,6 +18,7 @@ import java.util.List;
 import io.realm.Realm;
 import note_app.roman.note_app.R;
 import note_app.roman.note_app.note.Note;
+import note_app.roman.note_app.ui.activity.MainActivity;
 import note_app.roman.note_app.utils.dialog.DialogAddNote;
 
 public class RecyclerViewAdapter extends RecyclerView.Adapter<RecyclerViewAdapter.ViewHolder> {
@@ -44,10 +48,17 @@ public class RecyclerViewAdapter extends RecyclerView.Adapter<RecyclerViewAdapte
         holder.tvDescription.setText(note.getDescription());
         holder.tvType.setText(note.getType());
         holder.tvStatus.setText(note.getStatus());
+        holder.tvStatus.setText(note.getStatus());
+        if("No_Photo_File".equals(note.getFilePath())) {
+            holder.ivPic.setVisibility(View.INVISIBLE);
+        }else{
+            Bitmap bitmap = PictureResizeUtil.getScaledBitmap(note.getFilePath(), activity);
+            holder.ivPic.setImageBitmap(RotateBitmap(bitmap, 90));
+        }
 
         holder.itemView.setOnClickListener(v -> {
             Note selectedNote = realm.where(Note.class).equalTo("title", (String) holder.tvTitle.getText()).findFirst();
-            DialogAddNote customDialog = new DialogAddNote((AppCompatActivity) activity, selectedNote);
+            DialogAddNote customDialog = new DialogAddNote((AppCompatActivity) activity, selectedNote, (MainActivity) activity);
             customDialog.showDialog();
         });
 
@@ -64,6 +75,7 @@ public class RecyclerViewAdapter extends RecyclerView.Adapter<RecyclerViewAdapte
         private TextView tvType;
         private TextView tvStatus;
         private LinearLayout llRecycleViewItem;
+        private ImageView ivPic;
 
         ViewHolder(View itemView) {
             super(itemView);
@@ -71,6 +83,13 @@ public class RecyclerViewAdapter extends RecyclerView.Adapter<RecyclerViewAdapte
             tvDescription = itemView.findViewById(R.id.tvDescription);
             tvType = itemView.findViewById(R.id.tvType);
             tvStatus = itemView.findViewById(R.id.tvStatus);
+            ivPic = itemView.findViewById(R.id.ivPic);
         }
+    }
+
+    private static Bitmap RotateBitmap(Bitmap source, float angle) {
+        Matrix matrix = new Matrix();
+        matrix.postRotate(angle);
+        return Bitmap.createBitmap(source, 0, 0, source.getWidth(), source.getHeight(), matrix, true);
     }
 }

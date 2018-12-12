@@ -35,7 +35,6 @@ public class FragmentForTabs extends Fragment {
                              Bundle savedInstanceState) {
 
         View view = inflater.inflate(R.layout.fragment_for_notes, container, false);
-        ButterKnife.bind(this, view);
 
         realm = Realm.getDefaultInstance();
 
@@ -108,4 +107,9 @@ public class FragmentForTabs extends Fragment {
         recyclerView.setAdapter(adapter);
     }
 
+    @Override
+    public void onDestroyView() {
+        super.onDestroyView();
+        recyclerView.setAdapter(null);
+    }
 }
